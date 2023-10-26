@@ -62,6 +62,7 @@ class Juego:
             self.screen.blit(agua.image, self.camera.apply(agua))
         for enemigo in self.enemigo:
             self.screen.blit(enemigo.image, self.camera.apply(enemigo))
+            self.screen.blit(enemigo.proyectil.image, self.camera.apply(enemigo.proyectil))
         self.screen.blit(self.jugador.image, self.camera.apply(self.jugador))
         self.screen.blit(self.jugador.image_corazones, (0, 0))
         
@@ -147,14 +148,11 @@ class Jugador(pygame.sprite.Sprite):
         self.get_vida()
         self.movimiento()
         self.animacion()
-        #self.colision_enemigo()
         
         self.rect.x += self.x_cambio
         self.colision_arboles('x')
-        #self.colision_agua('x')
         self.rect.y += self.y_cambio
         self.colision_arboles('y')
-        #self.colision_agua('y')
         
         self.x_cambio = 0
         self.y_cambio = 0
@@ -257,17 +255,15 @@ class Enemigo(pygame.sprite.Sprite):
         
         self.plantilla_enemigo = plantilla
         self.direccion = direccion
-        
-        #self.proyectiles = []
-        self.ultimo_disparo = 0
-        self.intervalo_disparo = INTERVALO_DISPARO
-        
         self.image = None
         self.rect = None
+        
+        self.proyectil = None
         self.proyectil_x = None
         self.proyectil_y = None
-        #self.rect.x = None
-        #self.rect.y = None
+        self.proyectil_x_cambio = None
+        self.proyectil_y_cambio = None
+        
         self.bucle_animacion = 0
         
         self.animaciones_abajo = [self.plantilla_enemigo.get_plantilla(3, 2, self.ancho, self.alto),
@@ -290,6 +286,8 @@ class Enemigo(pygame.sprite.Sprite):
             self.rect.y = self.y
             self.proyectil_x = self.rect.centerx
             self.proyectil_y = self.rect.bottom
+            self.proyectil_y_cambio = self.proyectil_y
+            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y_cambio)
             #for proyectil in self.proyectiles:
             #    proyectil.y += VELOCIDAD_DISPARO
         if self.direccion == '4':
@@ -299,6 +297,7 @@ class Enemigo(pygame.sprite.Sprite):
             self.rect.y = self.y
             self.proyectil_x = self.rect.left
             self.proyectil_y = self.rect.centery
+            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y)
             #for proyectil in self.proyectiles:
             #    proyectil.x -= VELOCIDAD_DISPARO
         if self.direccion == '6':
@@ -308,6 +307,7 @@ class Enemigo(pygame.sprite.Sprite):
             self.rect.y = self.y
             self.proyectil_x = self.rect.right
             self.proyectil_y = self.rect.centery
+            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y)
             #for proyectil in self.proyectiles:
             #    proyectil.x += VELOCIDAD_DISPARO
         if self.direccion == '8':
@@ -317,6 +317,7 @@ class Enemigo(pygame.sprite.Sprite):
             self.rect.y = self.y
             self.proyectil_x = self.rect.centerx
             self.proyectil_y = self.rect.top
+            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y)
             #for proyectil in self.proyectiles:
             #    proyectil.y -= VELOCIDAD_DISPARO
     
@@ -352,9 +353,19 @@ class Enemigo(pygame.sprite.Sprite):
                 self.image = self.animaciones_arriba[1]
                 if self.bucle_animacion > 1.1:
                     self.bucle_animacion = 0
-
+                    
+    def crear_roca(self):
+        if self.bucle_animacion >= 1:
+            if self.direccion == '2':
+                self.proyectil_y_cambio += VELOCIDAD_DISPARO
+                self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y_cambio)
+        if self.bucle_animacion == 0:
+            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y)
+            self.proyectil_y_cambio = self.proyectil_y
+    
     def update(self):
         self.animacion()
+        self.crear_roca()
     #    if self.direccion == '2':
     #        self.proyectil_y += VELOCIDAD_DISPARO
     #    if self.direccion == '4':
@@ -400,13 +411,15 @@ class Enemigo(pygame.sprite.Sprite):
                 proyectil.move_ip(0, -VELOCIDAD_DISPARO)
 """
 class Proyectil (pygame.sprite.Sprite):
-    def __init__ (self):
+    def __init__ (self, x, y):
         super().__init__()
-        self.radio = 5
-        self.color = ROJO
-    
-    #def dibujar(self, screen):
-    #    pygame.draw.circle(screen, self.color, (self.x, self.y), self.radio)
+        self.ancho = 15
+        self.alto = 12
+        self.plantilla_roca = Plantilla_Sprites('imagenes/terrain.png')
+        self.image = self.plantilla_roca.get_plantilla(932, 623, self.ancho, self.alto)
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
 
 class Arbol(pygame.sprite.Sprite):
     def __init__(self, x, y, plantilla):
