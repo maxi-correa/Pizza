@@ -36,7 +36,7 @@ class Juego:
                     agua = Agua(j,i,self.plantilla_terreno)
                     self.agua.append(agua)
                 if columna == '2' or columna == '4' or columna == '6' or columna == '8':
-                    enemigo = Enemigo(j,i,self.plantilla_enemigo, columna)
+                    enemigo = Enemigo(j,i,self.plantilla_enemigo, self.plantilla_terreno, columna)
                     self.enemigo.append(enemigo)
     
     def cargar_mapa(self):
@@ -100,6 +100,7 @@ class Jugador(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+        self.proyectiles_colisionados = set()
         
         self.x_cambio = 0
         self.y_cambio = 0
@@ -127,11 +128,8 @@ class Jugador(pygame.sprite.Sprite):
         self.arboles = arboles
         self.agua = agua
     
-    def recibir_ataque(self):
-        pass
-    
     def get_vida(self):
-        if self.colision_enemigo() or self.recibir_ataque():
+        if self.colision_enemigo() or self.colision_proyectil():
             self.vida -= 1
             if self.vida == 3:
                 return self.vida
@@ -189,6 +187,13 @@ class Jugador(pygame.sprite.Sprite):
         for enemigo in self.enemigo:
             if self.rect.colliderect(enemigo.rect):
                 return True
+            
+    def colision_proyectil(self):
+        for enemigo in self.enemigo:
+            if enemigo.proyectil not in self.proyectiles_colisionados:
+                if self.rect.colliderect(enemigo.proyectil.rect):
+                    self.proyectiles_colisionados.add(enemigo.proyectil)
+                    return True
     
     def colision_agua(self):
         for agua in self.agua:
@@ -246,7 +251,7 @@ class Jugador(pygame.sprite.Sprite):
                     self.bucle_animacion = 1
 
 class Enemigo(pygame.sprite.Sprite):
-    def __init__(self, x, y, plantilla, direccion):
+    def __init__(self, x, y, plantilla, plantilla_roca, direccion):
         super().__init__()
         self.x = x * TAMANIO_MOSAICO
         self.y = y * TAMANIO_MOSAICO
@@ -258,11 +263,14 @@ class Enemigo(pygame.sprite.Sprite):
         self.image = None
         self.rect = None
         
+        self.plantilla_roca = plantilla_roca
         self.proyectil = None
         self.proyectil_x = None
         self.proyectil_y = None
-        self.proyectil_x_cambio = None
-        self.proyectil_y_cambio = None
+        self.arrojando = False
+        self.cont = 0
+        #self.proyectil_x_cambio = None
+        #self.proyectil_y_cambio = None
         
         self.bucle_animacion = 0
         
@@ -286,8 +294,8 @@ class Enemigo(pygame.sprite.Sprite):
             self.rect.y = self.y
             self.proyectil_x = self.rect.centerx
             self.proyectil_y = self.rect.bottom
-            self.proyectil_y_cambio = self.proyectil_y
-            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y_cambio)
+            #self.proyectil_y_cambio = self.proyectil_y
+            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y, self.plantilla_roca)
             #for proyectil in self.proyectiles:
             #    proyectil.y += VELOCIDAD_DISPARO
         if self.direccion == '4':
@@ -297,7 +305,7 @@ class Enemigo(pygame.sprite.Sprite):
             self.rect.y = self.y
             self.proyectil_x = self.rect.left
             self.proyectil_y = self.rect.centery
-            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y)
+            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y, self.plantilla_roca)
             #for proyectil in self.proyectiles:
             #    proyectil.x -= VELOCIDAD_DISPARO
         if self.direccion == '6':
@@ -307,7 +315,7 @@ class Enemigo(pygame.sprite.Sprite):
             self.rect.y = self.y
             self.proyectil_x = self.rect.right
             self.proyectil_y = self.rect.centery
-            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y)
+            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y, self.plantilla_roca)
             #for proyectil in self.proyectiles:
             #    proyectil.x += VELOCIDAD_DISPARO
         if self.direccion == '8':
@@ -317,7 +325,7 @@ class Enemigo(pygame.sprite.Sprite):
             self.rect.y = self.y
             self.proyectil_x = self.rect.centerx
             self.proyectil_y = self.rect.top
-            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y)
+            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y, self.plantilla_roca)
             #for proyectil in self.proyectiles:
             #    proyectil.y -= VELOCIDAD_DISPARO
     
@@ -355,14 +363,57 @@ class Enemigo(pygame.sprite.Sprite):
                     self.bucle_animacion = 0
                     
     def crear_roca(self):
-        if self.bucle_animacion >= 1:
-            if self.direccion == '2':
-                self.proyectil_y_cambio += VELOCIDAD_DISPARO
-                self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y_cambio)
-        if self.bucle_animacion == 0:
-            self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y)
-            self.proyectil_y_cambio = self.proyectil_y
-    
+        if self.direccion == '2':
+            if self.bucle_animacion > 1 and not self.arrojando:
+                self.arrojando = True
+            
+            if self.arrojando:
+                self.proyectil.rect.y += VELOCIDAD_DISPARO
+                self.cont += 1
+                if self.cont == 50:
+                    self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y, self.plantilla_roca)
+                    self.proyectil.rect.y = self.proyectil_y
+                    self.cont = 0
+                    self.arrojando = False
+        
+        if self.direccion == '4':
+            if self.bucle_animacion > 1 and not self.arrojando:
+                self.arrojando = True
+            
+            if self.arrojando:
+                self.proyectil.rect.x -= VELOCIDAD_DISPARO
+                self.cont += 1
+                if self.cont == 50:
+                    self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y, self.plantilla_roca)
+                    self.proyectil.rect.x = self.proyectil_x
+                    self.cont = 0
+                    self.arrojando = False
+        
+        if self.direccion == '8':
+            if self.bucle_animacion > 1 and not self.arrojando:
+                self.arrojando = True
+            
+            if self.arrojando:
+                self.proyectil.rect.y -= VELOCIDAD_DISPARO
+                self.cont += 1
+                if self.cont == 50:
+                    self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y, self.plantilla_roca)
+                    self.proyectil.rect.y = self.proyectil_y
+                    self.cont = 0
+                    self.arrojando = False
+        
+        if self.direccion == '6':
+            if self.bucle_animacion > 1 and not self.arrojando:
+                self.arrojando = True
+            
+            if self.arrojando:
+                self.proyectil.rect.x += VELOCIDAD_DISPARO
+                self.cont += 1
+                if self.cont == 50:
+                    self.proyectil = Proyectil(self.proyectil_x, self.proyectil_y, self.plantilla_roca)
+                    self.proyectil.rect.x = self.proyectil_x
+                    self.cont = 0
+                    self.arrojando = False
     def update(self):
         self.animacion()
         self.crear_roca()
@@ -411,11 +462,11 @@ class Enemigo(pygame.sprite.Sprite):
                 proyectil.move_ip(0, -VELOCIDAD_DISPARO)
 """
 class Proyectil (pygame.sprite.Sprite):
-    def __init__ (self, x, y):
+    def __init__ (self, x, y, plantilla):
         super().__init__()
         self.ancho = 15
         self.alto = 12
-        self.plantilla_roca = Plantilla_Sprites('imagenes/terrain.png')
+        self.plantilla_roca = plantilla
         self.image = self.plantilla_roca.get_plantilla(932, 623, self.ancho, self.alto)
         self.rect = self.image.get_rect()
         self.rect.x = x
