@@ -1,0 +1,47 @@
+#Resolución de pantalla
+PANTALLA_ANCHO = 800
+PANTALLA_ALTO = 600
+#Colores
+NEGRO =  (  0,   0,   0)
+BLANCO = (255, 255, 255)
+ROJO =   (255,   0,   0)
+#Detalles de sprite
+TAMANIO_MOSAICO = 32
+VELOCIDAD_JUGADOR = 4
+VELOCIDAD_REDUCIDA = 1
+VELOCIDAD_DISPARO = 4
+FPS = 60
+VIDA_INICIAL = 3
+INTERVALO_DISPARO = 3000 #en milisegundos (3 segundos)
+
+CAPA = [1, 2, 3]
+
+MAPA = [
+    'AAAAAAAAAAAAAAAAAAAAAAAAAWWWWWWWWWWW',
+    'A............2..........AWWWWWWWWWWW',
+    'A....J...........A......AWWWWWWWWWWW',
+    'A.......................AWWWWWWWWWWW',
+    'A6......................AWWWWWWWWWWW',
+    'A.......................AWWWWWWWWWWW',
+    'A.......A...WW..........AWWWWWWWWWWW',
+    'A...........WW..........AWWWWWWWWWWW',
+    'A...........WW..........AWWWWWWWWWWW',
+    'A.......................AWWWWWWWWWWW',
+    'A.......................AWWWWWWWWWWW',
+    'A..................4....AWWWWWWWWWWW',
+    'A.......................AWWWWWWWWWWW',
+    'A................A......AWWWWWWWWWWW',
+    'A.........8.............AWWWWWWWWWWW',
+    'A...A...................AWWWWWWWWWWW',
+    'A.......................AWWWWWWWWWWW',
+    'A.......................AWWWWWWWWWWW',
+    'AAAAAAAAAAAAAAAAAAAAAAAAAWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
+]
