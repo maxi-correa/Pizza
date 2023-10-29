@@ -1,6 +1,7 @@
 import pygame
 from plantilla_sprites import Plantilla_Sprites
 from constantes import *
+from boton import Boton
 import math
 
 class Juego:
@@ -14,16 +15,65 @@ class Juego:
         self.pisos = []
         self.agua = []
         self.enemigo = []
+        #Carga de imagenes de pausa
+        self.titulo_img = pygame.image.load('imagenes/adventure_time.png').convert_alpha()
+        self.back_img = pygame.image.load('imagenes/back_btn.png').convert_alpha()
+        self.option_2_img = pygame.image.load('imagenes/option_2_btn.png').convert_alpha()
+        self.sound_on_2_img = pygame.image.load('imagenes/sound_on_2_btn.png').convert_alpha()
+        self.sound_off_2_img = pygame.image.load('imagenes/sound_off_2_btn.png').convert_alpha()
+        self.quit_2_img = pygame.image.load('imagenes/quit_2_btn.png').convert_alpha()
+        self.menu_img = pygame.image.load('imagenes/menu_btn.png').convert_alpha()
+        self.boton_menu = Boton(750, 10, self.menu_img, 1)  
         #Carga de imagen de Sprites solo 1 vez
         self.plantilla_jugador = Plantilla_Sprites('imagenes/character.png')
         self.plantilla_corazones = Plantilla_Sprites('imagenes/corazones.png')
         self.plantilla_arboles = Plantilla_Sprites('imagenes/arboles.png')
         self.plantilla_terreno = Plantilla_Sprites('imagenes/terrain.png')
         self.plantilla_enemigo = Plantilla_Sprites('imagenes/enemy.png')
-        self.plantilla_ataque = Plantilla_Sprites('imagenes/attack')
+        self.plantilla_ataque = Plantilla_Sprites('imagenes/attack.png')
+        #Carga de música
+        self.menu_theme = pygame.mixer.Sound('sonidos/menu_theme.ogg')
+        self.battle_theme = pygame.mixer.Sound('sonidos/battle_theme.ogg')
+        self.tema_batalla = True
+        
+        self.pausado = False
         
     def get_reloj(self):
         return self.reloj.tick(FPS)
+    
+    def pausa(self):
+        #Instancia de botones
+        boton_back = Boton(320, 300, self.back_img, 1.5)
+        boton_sound_on_2 = Boton(470, 400, self.sound_on_2_img, 1.5)
+        boton_sound_off_2 = Boton(550, 400, self.sound_off_2_img, 1.5)
+        boton_quit_2 = Boton(320, 500, self.quit_2_img, 1.5)
+        
+        #Ciclo de pausa
+        while self.pausado:
+            for evento in pygame.event.get():
+                if evento.type == pygame.QUIT:
+                    pygame.quit()
+            
+            self.screen.fill(AZUL)
+            self.screen.blit(self.titulo_img, [50,-70])
+            self.screen.blit(pygame.transform.scale(self.option_2_img, (135,55)), [320, 400])
+            
+            if boton_back.dibujar(self.screen):
+                self.pausado = False
+            
+            if boton_sound_on_2.dibujar(self.screen):
+                if not self.tema_batalla:
+                    self.battle_theme.play(-1)
+                    self.tema_batalla = True
+            
+            if boton_sound_off_2.dibujar(self.screen):
+                self.battle_theme.stop()
+                self.tema_batalla = False
+                
+            if boton_quit_2.dibujar(self.screen):
+                pygame.quit()
+            
+            pygame.display.update()
     
     def cargar_elementos(self):
         for i, fila in enumerate(MAPA):
@@ -45,12 +95,32 @@ class Juego:
         for enemigo in self.enemigo:
             enemigo.carga_datos()
         self.jugador = Jugador(1, 1, self.plantilla_jugador, self.plantilla_corazones, self.plantilla_ataque, self.arboles, self.agua, self.enemigo, VIDA_INICIAL)
+        self.battle_theme.play(-1)
 
+    def vaciar(self):
+        self.jugador = None
+        self.arboles = []
+        self.pisos = []
+        self.agua = []
+        self.enemigo = []
+    
+    def verificar(self):
+        if self.jugador.termina_juego:
+            self.battle_theme.stop()
+            self.tema_batalla = False
+            return True
+        
     def update(self):
+        
         self.jugador.update()
         for enemigo in self.enemigo:
             enemigo.update()
         self.camera.update(self.jugador)
+        
+        self.verificar()
+        if pygame.key.get_pressed()[pygame.K_ESCAPE] or self.boton_menu.dibujar(self.screen):
+            self.pausado = True
+            self.pausa()
 
     def dibujar(self):
         self.screen.fill(NEGRO)
@@ -65,8 +135,11 @@ class Juego:
             self.screen.blit(enemigo.image, self.camera.apply(enemigo))
             self.screen.blit(enemigo.proyectil.image, self.camera.apply(enemigo.proyectil))
         self.screen.blit(self.jugador.image, self.camera.apply(self.jugador))
+        self.screen.blit(self.jugador.ataque.image, self.camera.apply(self.jugador.ataque))
         self.screen.blit(self.jugador.image_corazones, (0, 0))
-        #self.screen.blit(self.jugador.ataque.image, self.camera.apply(self.jugador.ataque))
+        
+        if self.boton_menu.dibujar(self.screen):
+            pass
         
         pygame.display.flip()
 
@@ -91,7 +164,7 @@ class Jugador(pygame.sprite.Sprite):
         self.vida = vida
         self.plantilla_corazones = plantilla_corazones
         self.image_corazones = self.plantilla_corazones.get_plantilla(15,4,101,31)
-        self.plantilla.ataque = plantilla_ataque
+        self.plantilla_ataque = plantilla_ataque
         
         self.x = x * TAMANIO_MOSAICO
         self.y = y * TAMANIO_MOSAICO
@@ -130,25 +203,40 @@ class Jugador(pygame.sprite.Sprite):
         self.enemigo = enemigo
         self.arboles = arboles
         self.agua = agua
+        self.ataque = Ataque(-1, -1, self.plantilla_ataque)
+        self.ataque_original = Ataque(-1, -1, self.plantilla_ataque)
+        self.atacando = False
+        self.termina_juego = False
     
+    def game_over(self):
+        if self.vida < 0 or not self.enemigo:
+            self.termina_juego = True
+            
     def get_vida(self):
         if self.colision_enemigo() or self.colision_proyectil():
             self.vida -= 1
-            if self.vida == 3:
-                return self.vida
             if self.vida == 2:
                 self.image_corazones = self.plantilla_corazones.get_plantilla(15,40,101,30)
             if self.vida == 1:
                 self.image_corazones = self.plantilla_corazones.get_plantilla(15,76,101,30)
             if self.vida == 0:
                 self.image_corazones = self.plantilla_corazones.get_plantilla(15,112,101,30)
-            if self.vida < 0:
-                pygame.quit()
-        
+    
+    def atacar(self):
+        if self.atacando:
+            self.ataque.animacion(self.direccion)
+            for enemigo in self.enemigo:
+                if self.ataque.rect.colliderect(enemigo.rect):
+                    self.enemigo.remove(enemigo)
+        if self.ataque.bucle_animacion == 0:
+            self.atacando = False
+            self.ataque = self.ataque_original
+    
     def update(self):
         self.get_vida()
-        self.movimiento()
+        self.acciones()
         self.animacion()
+        self.atacar()
         
         self.rect.x += self.x_cambio
         self.colision_arboles('x')
@@ -157,8 +245,10 @@ class Jugador(pygame.sprite.Sprite):
         
         self.x_cambio = 0
         self.y_cambio = 0
+        
+        self.game_over()
     
-    def movimiento(self):
+    def acciones(self):
         teclas = pygame.key.get_pressed()
         
         if teclas[pygame.K_LEFT]:
@@ -185,6 +275,16 @@ class Jugador(pygame.sprite.Sprite):
                 self.y_cambio += VELOCIDAD_REDUCIDA
             else:
                 self.y_cambio += VELOCIDAD_JUGADOR
+        if teclas[pygame.K_SPACE]:
+                self.atacando = True
+                if self.direccion == "abajo":
+                    self.ataque = Ataque(self.rect.x, self.rect.y + TAMANIO_MOSAICO, self.plantilla_ataque)
+                if self.direccion == "arriba":
+                    self.ataque = Ataque(self.rect.x, self.rect.y - TAMANIO_MOSAICO, self.plantilla_ataque)
+                if self.direccion == "izquierda":
+                    self.ataque = Ataque(self.rect.x - TAMANIO_MOSAICO, self.rect.y, self.plantilla_ataque)
+                if self.direccion == "derecha":
+                    self.ataque = Ataque(self.rect.x + TAMANIO_MOSAICO, self.rect.y, self.plantilla_ataque)
     
     def colision_enemigo(self):
         for enemigo in self.enemigo:
@@ -257,13 +357,13 @@ class Ataque(pygame.sprite.Sprite):
     def __init__(self, x, y, plantilla):
         super().__init__()
         
-        self.x = x * TAMANIO_MOSAICO
-        self.y = y * TAMANIO_MOSAICO
+        self.x = x# * TAMANIO_MOSAICO
+        self.y = y# * TAMANIO_MOSAICO
         self.ancho = TAMANIO_MOSAICO
         self.alto = TAMANIO_MOSAICO
         
         self.plantilla_ataque = plantilla
-        self.image = self.plantilla_ataque.get_plantilla(0, 0, self.ancho, self.alto)
+        self.image = self.plantilla_ataque.get_plantilla(0, 64, self.ancho, self.alto)
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
@@ -299,25 +399,29 @@ class Ataque(pygame.sprite.Sprite):
             self.image = self.animaciones_arriba[math.floor(self.bucle_animacion)]
             self.bucle_animacion += 0.5
             if self.bucle_animacion >= 5:
-                self.kill()
+                self.image = self.animaciones_arriba[0]
+                self.bucle_animacion = 0
         
         if direccion == 'abajo':
             self.image = self.animaciones_abajo[math.floor(self.bucle_animacion)]
             self.bucle_animacion += 0.5
             if self.bucle_animacion >= 5:
-                self.kill()
+                self.image = self.animaciones_abajo[0]
+                self.bucle_animacion = 0
         
         if direccion == 'izquierda':
             self.image = self.animaciones_izquierda[math.floor(self.bucle_animacion)]
             self.bucle_animacion += 0.5
             if self.bucle_animacion >= 5:
-                self.kill()
+                self.image = self.animaciones_izquierda[0]
+                self.bucle_animacion = 0
         
         if direccion == 'derecha':
             self.image = self.animaciones_derecha[math.floor(self.bucle_animacion)]
             self.bucle_animacion += 0.5
             if self.bucle_animacion >= 5:
-                self.kill()
+                self.image = self.animaciones_derecha[0]
+                self.bucle_animacion = 0
 
 class Enemigo(pygame.sprite.Sprite):
     def __init__(self, x, y, plantilla, plantilla_roca, direccion):

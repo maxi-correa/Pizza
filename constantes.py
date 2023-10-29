@@ -5,9 +5,10 @@ PANTALLA_ALTO = 600
 NEGRO =  (  0,   0,   0)
 BLANCO = (255, 255, 255)
 ROJO =   (255,   0,   0)
+AZUL =   (  0,   0, 255)
 #Detalles de sprite
 TAMANIO_MOSAICO = 32
-VELOCIDAD_JUGADOR = 4
+VELOCIDAD_JUGADOR = 3
 VELOCIDAD_REDUCIDA = 1
 VELOCIDAD_DISPARO = 4
 FPS = 60
@@ -18,24 +19,37 @@ CAPA = [1, 2, 3]
 
 MAPA = [
     'AAAAAAAAAAAAAAAAAAAAAAAAAWWWWWWWWWWW',
-    'A............2..........AWWWWWWWWWWW',
-    'A....J...........A......AWWWWWWWWWWW',
+    'A...J...................AWWWWWWWWWWW',
+    'AAAAAAAAAAAAAAAAAAAAA...AWWWWWWWWWWW',
+    'AAAA..................8.AWWWWWWWWWWW',
+    'AAAAAAA.................AWWWWWWWWWWW',
+    'A6....A..A..............AWWWWWWWWWWW',
+    'A.....A8A...............AWWWWWWWWWWW',
+    'A.....AAAWWWWWWWWWWWWWWWAWWWWWWWWWWW',
     'A.......................AWWWWWWWWWWW',
-    'A6......................AWWWWWWWWWWW',
+    'AAAAA...................AWWWWWWWWWWW',
+    'AAAA....................AWWWWWWWWWWW',
+    'AAA..................AAAAWWWWWWWWWWW',
+    'AA...................WW4AWWWWWWWWWWW',
+    'AAAAA............A...WW4AWWWWWWWWWWW',
+    'A.26A................AAAAWWWWWWWWWWW',
+    'AWWWA...................AWWWWWWWWWWW',
     'A.......................AWWWWWWWWWWW',
-    'A.......A...WW..........AWWWWWWWWWWW',
-    'A...........WW..........AWWWWWWWWWWW',
-    'A...........WW..........AWWWWWWWWWWW',
-    'A.......................AWWWWWWWWWWW',
-    'A.......................AWWWWWWWWWWW',
-    'A..................4....AWWWWWWWWWWW',
-    'A.......................AWWWWWWWWWWW',
-    'A................A......AWWWWWWWWWWW',
-    'A.........8.............AWWWWWWWWWWW',
-    'A...A...................AWWWWWWWWWWW',
-    'A.......................AWWWWWWWWWWW',
-    'A.......................AWWWWWWWWWWW',
-    'AAAAAAAAAAAAAAAAAAAAAAAAAWWWWWWWWWWW',
+    'A.....AA.AA.AAAA.AAAA...AWWWWWWWWWWW',
+    'A.....A.A.A.A.......A...AWWWWWWWWWWW',
+    'A.....A...A.AAA..A..A...AWWWWWWWWWWW',
+    'A.....A...A.A.....AA....AWWWWWWWWWWW',
+    'A.........WWWWWWW.......AWWWWWWWWWWW',
+    'A.........WWAWAWW.......AWWWWWWWWWWW',
+    'A......AAAWW486WWAAA....AWWWWWWWWWWW',
+    'AAAAAAAAAAAAA..AAAAAAAAAAWWWWWWWWWWW',
+    'WWWWWWWWWWWWA.AWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWA.AWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWAWAWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWAWAWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWAWAWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWA8AWWWWWWWWWWWWWWWWWWWWW',
+    'WWWWWWWWWWWWAAAWWWWWWWWWWWWWWWWWWWWW',
     'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
     'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
     'WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW',
